@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Для расходов -->
+    <Button
+        android:id="@+id/editExpenseButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Редактировать расход"
+        android:onClick="showExpenseFields"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <EditText
+        android:id="@+id/expenseDateEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Дата"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/editExpenseButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="showDatePicker"/>
+
+
+    <TextView
+        android:id="@+id/expenseDateTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Дата"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/expenseDateEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="showDatePicker"/>
+
+    <TextView
+        android:id="@+id/selectedDateTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/expenseDateTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <DatePicker
+        android:id="@+id/datePicker"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/selectedDateTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <EditText
+        android:id="@+id/expenseAmountEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Сумма"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/datePicker"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <EditText
+        android:id="@+id/expenseNameEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Название"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/expenseAmountEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <Button
+        android:id="@+id/addExpenseNameButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Добавить расход"
+        android:onClick="addExpense"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/expenseNameEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Для доходов -->
+    <Button
+        android:id="@+id/editIncomeButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="showIncomeFields"
+        android:text="Редактировать доход"
+        app:layout_constraintTop_toBottomOf="@id/addExpenseNameButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <EditText
+        android:id="@+id/incomeDateEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Дата"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/editIncomeButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:clickable="true"
+        android:focusable="false"
+        android:onClick="showDatePicker"/>
+
+    <EditText
+        android:id="@+id/incomeAmountEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Сумма"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/incomeDateEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <EditText
+        android:id="@+id/incomeNameEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Название"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/incomeAmountEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+
+    <Button
+        android:id="@+id/addIncomeNameButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Добавить доход"
+        android:onClick="addIncome"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/incomeNameEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

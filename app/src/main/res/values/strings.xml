@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">financiescontrolbyandlari</string>
+    <string-array name="term_units">
+        <item>Месяцы</item>
+        <item>Годы</item>
+    </string-array>
+</resources>
