@@ -8,6 +8,7 @@
         android:layout_width="25dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textColor="@color/black"
         android:paddingRight="18dp"/>
 
     <TextView
@@ -15,6 +16,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textColor="@color/black"
         android:paddingRight="16dp"/>
 
     <TextView
@@ -22,11 +24,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textColor="@color/black"
         android:paddingRight="16dp"/>
 
     <TextView
         android:id="@+id/column4"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:layout_weight="1"/>
 </TableRow>
