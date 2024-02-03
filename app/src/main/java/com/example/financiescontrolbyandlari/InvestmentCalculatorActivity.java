@@ -47,7 +47,7 @@ public class InvestmentCalculatorActivity extends AppCompatActivity {
             String formattedAmount = formatAmountInRubles(amount);
 
             // Выводим результат в TextView
-            String resultText = String.format("Внесенная сумма: %s\nПроцентная ставка: %.2f%%\nПрибыль: %.2f", formattedAmount, interestRate, profit);
+            String resultText = String.format("Внесенная сумма: %s\nПроцентная ставка: %.2f%%\nПрибыль: %.2f ₽", formattedAmount, interestRate, profit);
             resultTextView.setText(resultText);
         } catch (NumberFormatException e) {
             // Выводим сообщение об ошибке с использованием Toast

@@ -33,16 +33,17 @@
 
     <Button
         android:id="@+id/editButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Изменить начальный счет"
-        app:layout_constraintTop_toBottomOf="@id/initialBalanceLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
+        android:layout_width="280dp"
+        android:layout_height="36dp"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="20dp"
-        android:onClick="toggleEditSection"/>
+        android:background="@drawable/buttonshape"
+        android:onClick="toggleEditSection"
+        android:text="Изменить начальный счет"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/initialBalanceLabel" />
 
     <EditText
         android:id="@+id/initialBalanceEditText"
@@ -60,21 +61,23 @@
 
     <Button
         android:id="@+id/buttonOpenTransactions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="280dp"
+        android:layout_height="36dp"
         android:text="Добавить транзакцию"
         android:onClick="openTransactionsActivity"
         app:layout_constraintTop_toBottomOf="@id/initialBalanceEditText"
+        android:background="@drawable/buttonshape"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="20dp"/>
 
     <Button
         android:id="@+id/showDataButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="280dp"
+        android:layout_height="36dp"
         android:text="Показать данные"
         android:onClick="openDataActivity"
+        android:background="@drawable/buttonshape"
         app:layout_constraintTop_toBottomOf="@id/buttonOpenTransactions"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

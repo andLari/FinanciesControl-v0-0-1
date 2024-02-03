@@ -18,21 +18,23 @@
 
     <Button
         android:id="@+id/investmentCalculatorButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Калькулятор Инвестиций"
+        android:layout_width="280dp"
+        android:layout_height="36dp"
         android:layout_below="@id/welcomeText"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:onClick="openInvestmentCalculator" />
+        android:layout_marginTop="21dp"
+        android:background="@drawable/buttonshape"
+        android:onClick="openInvestmentCalculator"
+        android:text="Калькулятор Инвестиций" />
 
     <Button
         android:id="@+id/budgetAnalysisButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Контроль Расходов"
+        android:layout_width="280dp"
+        android:layout_height="36dp"
         android:layout_below="@id/investmentCalculatorButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:onClick="openBudgetAnalysis" />
+        android:background="@drawable/buttonshape"
+        android:onClick="openBudgetAnalysis"
+        android:text="Контроль Расходов" />
 </RelativeLayout>

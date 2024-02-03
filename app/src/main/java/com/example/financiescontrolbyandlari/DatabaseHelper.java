@@ -3,9 +3,11 @@ package com.example.financiescontrolbyandlari;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +15,11 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "transactions_db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     // Таблица транзакций
+    private Context context;
+
     public static final String TABLE_TRANSACTIONS = "transactions";
     public static final String KEY_ID = "id";
     public static final String KEY_DATE = "date";
@@ -31,14 +35,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + KEY_AMOUNT + " REAL,"
             + KEY_NAME + " TEXT" + ")";
 
+    private static final String TABLE_SETTINGS = "settings";
+    private static final String COLUMN_ID = "id";
+    private static final String COLUMN_INITIAL_BALANCE = "initial_balance";
+
+    private static final String CREATE_TABLE_SETTINGS = "CREATE TABLE " + TABLE_SETTINGS + "("
+            + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + COLUMN_INITIAL_BALANCE + " REAL DEFAULT 0" + ")";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         // Создание таблицы транзакций
         db.execSQL(CREATE_TABLE_TRANSACTIONS);
+        db.execSQL(CREATE_TABLE_SETTINGS);
     }
 
     @Override
@@ -49,18 +63,106 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    // В DatabaseHelper
+    public double updateInitialBalance(double transactionAmount, String transactionType) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        double currentBalance = getInitialBalance();
+        double newBalance;
+
+        // Добавим лог для отслеживания изменения счета
+        Log.d("DatabaseHelper", "Before Update - Current Balance: " + currentBalance);
+
+        if ("income".equals(transactionType)) {
+            // Если транзакция - доход, добавляем к текущему балансу
+            newBalance = currentBalance + transactionAmount;
+        } else if ("expense".equals(transactionType)) {
+            // Если транзакция - расход, вычитаем из текущего баланса
+            newBalance = currentBalance - transactionAmount;
+        } else {
+            // Неизвестный тип транзакции, не вносим изменений
+            newBalance = currentBalance;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_INITIAL_BALANCE, newBalance);
+
+        db.update(TABLE_SETTINGS, values, null, null);
+        db.close();
+
+        // Добавим лог для отслеживания изменения счета
+        Log.d("DatabaseHelper", "After Update - New Balance: " + newBalance);
+
+        return newBalance;
+    }
+
+    public double updateAndGetCurrentBalance(double amount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Получаем текущий баланс из базы данных
+        double currentBalance = getInitialBalance();
+
+        // Вычисляем новый баланс
+        double newBalance = currentBalance + amount;
+
+        // Обновляем значение в базе данных
+        updateInitialBalance(newBalance);
+
+        // Возвращаем новый баланс
+        return newBalance;
+    }
+
+
+    public void updateInitialBalance(double newBalance) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_INITIAL_BALANCE, newBalance);
+        db.update(TABLE_SETTINGS, values, null, null);
+    }
+
+
+
+    public void saveInitialBalance(double initialBalance) {
+        SharedPreferences preferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putFloat("initialBalance", (float) initialBalance);
+        editor.apply();
+    }
+
+    public double getInitialBalance() {
+        SharedPreferences preferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        return preferences.getFloat("initialBalance", 0);
+    }
+
+    public double getAndIncrementInitialBalance(double transactionAmount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        double currentBalance = getInitialBalance();
+        double newBalance = currentBalance + transactionAmount;
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_INITIAL_BALANCE, newBalance);
+
+        db.update(TABLE_SETTINGS, values, null, null);
+        db.close();
+
+        return newBalance;
+    }
+
     // Сохранение транзакции
     public long saveTransaction(Transaction transaction) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(KEY_DATE, transaction.getDate());
-        values.put(KEY_TYPE, transaction.getType());
+        values.put(KEY_TYPE, transaction.getType().toLowerCase());
         values.put(KEY_AMOUNT, transaction.getAmount());
         values.put(KEY_NAME, transaction.getName());
 
         // Вставка строки в таблицу
         long id = db.insert(TABLE_TRANSACTIONS, null, values);
+
+        // Обновление счета в зависимости от типа транзакции
+        double transactionAmount = transaction.getAmount();
+        updateInitialBalance(transactionAmount, transaction.getType());
 
         // Закрытие базы данных
         db.close();
@@ -68,7 +170,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return id;
     }
 
-    // Получение списка всех транзакций
+
+
+
+
+    private double getUpdatedInitialBalance(Transaction transaction) {
+        double currentBalance = getInitialBalance();
+        if ("income".equals(transaction.getType())) {
+            // Если транзакция - доход, увеличиваем счет
+            currentBalance += transaction.getAmount();
+        } else {
+            // Если транзакция - расход, уменьшаем счет
+            currentBalance -= transaction.getAmount();
+        }
+        return currentBalance;
+    }
+
     @SuppressLint("Range")
     public List<Transaction> getAllTransactions() {
         List<Transaction> transactions = new ArrayList<>();
@@ -84,7 +201,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Transaction transaction = new Transaction();
                 transaction.setId(cursor.getInt(cursor.getColumnIndex(KEY_ID)));
                 transaction.setDate(cursor.getString(cursor.getColumnIndex(KEY_DATE)));
-                transaction.setType(cursor.getString(cursor.getColumnIndex(KEY_TYPE)));
+                transaction.setType(cursor.getString(cursor.getColumnIndex(KEY_TYPE)).toLowerCase());
                 transaction.setAmount(cursor.getDouble(cursor.getColumnIndex(KEY_AMOUNT)));
                 transaction.setName(cursor.getString(cursor.getColumnIndex(KEY_NAME)));
 
@@ -113,7 +230,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 do {
                     @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(KEY_ID));
                     @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex(KEY_DATE));
-                    @SuppressLint("Range") String type = cursor.getString(cursor.getColumnIndex(KEY_TYPE));
+                    @SuppressLint("Range") String type = cursor.getString(cursor.getColumnIndex(KEY_TYPE)).toLowerCase();
                     @SuppressLint("Range") double amount = cursor.getDouble(cursor.getColumnIndex(KEY_AMOUNT));
                     @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex(KEY_NAME));
 
@@ -130,8 +247,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return transactions;
     }
-
-
 
     // Удаление транзакции по ID
     public void deleteTransaction(long transactionId) {

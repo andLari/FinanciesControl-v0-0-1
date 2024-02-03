@@ -10,13 +10,14 @@
     <!-- Для расходов -->
     <Button
         android:id="@+id/editExpenseButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Редактировать расход"
+        android:layout_width="350dp"
+        android:layout_height="41dp"
+        android:background="@drawable/buttonshape"
         android:onClick="showExpenseFields"
-        app:layout_constraintTop_toTopOf="parent"
+        android:text="Редактировать расход"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/expenseDateEditText"
@@ -85,26 +86,30 @@
 
     <Button
         android:id="@+id/addExpenseNameButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="350dp"
+        android:layout_height="41dp"
         android:text="Добавить расход"
         android:onClick="addExpense"
+        android:background="@drawable/buttonshape"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/expenseNameEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Для доходов -->
+
     <Button
         android:id="@+id/editIncomeButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="350dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/buttonshape"
         android:onClick="showIncomeFields"
         android:text="Редактировать доход"
-        app:layout_constraintTop_toBottomOf="@id/addExpenseNameButton"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        />
+        app:layout_constraintHorizontal_bias="0.517"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/addExpenseNameButton" />
 
     <EditText
         android:id="@+id/incomeDateEditText"
@@ -143,11 +148,12 @@
 
     <Button
         android:id="@+id/addIncomeNameButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="350dp"
+        android:layout_height="41dp"
         android:text="Добавить доход"
         android:onClick="addIncome"
         android:visibility="gone"
+        android:background="@drawable/buttonshape"
         app:layout_constraintTop_toBottomOf="@id/incomeNameEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>

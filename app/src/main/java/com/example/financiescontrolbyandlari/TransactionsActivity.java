@@ -1,9 +1,11 @@
 package com.example.financiescontrolbyandlari;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -26,7 +28,6 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
     private Button addIncomeNameButton;
 
     private boolean isEditingExpense = false;
-
 
     private DatabaseHelper databaseHelper;
 
@@ -54,16 +55,12 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
         selectedDateTextView = findViewById(R.id.selectedDateTextView);
         selectedDateTextView.setOnClickListener(this);
 
-
-
         // Изменения для incomeDateEditText
         incomeDateEditText.setOnClickListener(this);
-
 
         // Добавляем кнопке "Редактировать расход" обработчик onClick
         Button editExpenseButton = findViewById(R.id.editExpenseButton);
         editExpenseButton.setOnClickListener(this);
-
 
         // Инициализация базы данных
         databaseHelper = new DatabaseHelper(this);
@@ -80,7 +77,6 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
             showExpenseFields(v);
         }
     }
-
 
     public void showDatePicker(View view) {
         DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
@@ -116,11 +112,6 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, dateSetListener, year, month, day);
         datePickerDialog.show();
     }
-
-
-
-
-
 
     // Показать поля для расходов
     public void showExpenseFields(View view) {
@@ -170,14 +161,38 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
                     clearFields(expenseDateEditText, expenseAmountEditText, expenseNameEditText);
                     // Скроем поля
                     toggleVisibility(expenseDateEditText, expenseAmountEditText, expenseNameEditText, addExpenseNameButton);
+
+                    // Обновляем анализ в BudgetAnalysisActivity
+                    double newBalance = databaseHelper.updateAndGetCurrentBalance(-amount);
+                    // Сохраняем новое значение в базе данных
+                    databaseHelper.saveInitialBalance(newBalance);
+                    // Обновляем отображение в BudgetAnalysisActivity
+                    updateAndReturnToBudgetAnalysisActivity(newBalance);
                 } else {
                     showToast("Ошибка при добавлении расхода в базу данных");
                 }
             } catch (NumberFormatException e) {
                 showToast("Ошибка: введите корректное значение для суммы");
             }
+
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
+    private void updateAndReturnToBudgetAnalysisActivity(double newBalance) {
+        // Создаем Intent для возврата в BudgetAnalysisActivity
+        Intent returnIntent = new Intent();
+        // Помещаем новый баланс в Intent
+        returnIntent.putExtra("newBalance", newBalance);
+
+        databaseHelper.updateInitialBalance(newBalance);
+        // Устанавливаем результат выполнения, указывая, что операция прошла успешно
+        setResult(RESULT_OK, returnIntent);
+
+    }
+
+
 
     public void addIncome(View view) {
         // Проверка на заполнение даты и суммы
@@ -201,18 +216,29 @@ public class TransactionsActivity extends AppCompatActivity implements View.OnCl
                 // Сохранение транзакции в базе данных
                 long transactionId = databaseHelper.saveTransaction(incomeTransaction);
 
+                // После успешного добавления дохода
                 if (transactionId != -1) {
                     showToast("Доход добавлен");
                     // Очистим поля после добавления
                     clearFields(incomeDateEditText, incomeAmountEditText, incomeNameEditText);
                     // Скроем поля
                     toggleVisibility(incomeDateEditText, incomeAmountEditText, incomeNameEditText, addIncomeNameButton);
+
+                    // Обновляем анализ в BudgetAnalysisActivity
+                    double newBalance = databaseHelper.updateAndGetCurrentBalance(amount);
+                    // Сохраняем новое значение в базе данных
+                    databaseHelper.saveInitialBalance(newBalance);
+                    // Обновляем отображение в BudgetAnalysisActivity
+                    updateAndReturnToBudgetAnalysisActivity(newBalance);
                 } else {
                     showToast("Ошибка при добавлении дохода в базу данных");
                 }
             } catch (NumberFormatException e) {
                 showToast("Ошибка: введите корректное значение для суммы");
             }
+
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
