@@ -15,11 +15,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class BudgetAnalysisActivity extends AppCompatActivity {
 
+
     private TextView initialBalanceLabel;
     private EditText initialBalanceEditText;
     private Button editButton;
 
-    private DatabaseHelper databaseHelper;  // Объявление databaseHelper
+    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,26 +94,10 @@ public class BudgetAnalysisActivity extends AppCompatActivity {
     }
 
 
-    private void updateAnalysis() {
-        // Метод для обновления текста анализа
-        // Вместо этого метода добавьте вашу логику анализа бюджета
-        String initialBalanceText = initialBalanceEditText.getText().toString();
-        if (!initialBalanceText.isEmpty()) {
-            try {
-                double initialBalance = Double.parseDouble(initialBalanceText);
-                setInitialBalance(initialBalance);
-            } catch (NumberFormatException e) {
-                // Если введено не число, показываем сообщение об ошибке
-                showToast("Ошибка: введите корректное число");
-            }
-        } else {
-            // Если поле ввода не заполнено, выводим сообщение об ошибке
-            showToast("Ошибка: введите начальный счет");
-        }
-    }
+
 
     // Метод для установки начального счета
-    private void setInitialBalance(double balance) {
+    public void setInitialBalance(double balance) {
         initialBalanceLabel.setText("Ваш счет: " + balance + " ₽");
         initialBalanceEditText.setText(String.valueOf(balance));
     }
@@ -120,7 +105,9 @@ public class BudgetAnalysisActivity extends AppCompatActivity {
 
 
 
-    // Ваш код в BudgetAnalysisActivity.java
+
+
+
     public void openTransactionsActivity(View view) {
         Intent intent = new Intent(this, TransactionsActivity.class);
         startActivityForResult(intent, 529412315);

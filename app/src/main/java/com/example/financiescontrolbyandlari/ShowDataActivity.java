@@ -2,37 +2,51 @@ package com.example.financiescontrolbyandlari;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.view.View;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.fragment.app.FragmentManager;
+
+import com.github.mikephil.charting.animation.Easing;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
-public class ShowDataActivity extends AppCompatActivity implements View.OnClickListener {
+public class ShowDataActivity extends AppCompatActivity implements View.OnClickListener, ConfirmationDialogFragment.OnConfirmationListener {
 
+
+    private boolean isChartMode = false;
+    private Button showDataChartButton;
     private EditText showDataDateEditText;
-    private RecyclerView dataRecyclerView;
-    private TextView selectedDateTextView;
-    private TextView dataInfoTextView; // Новое TextView для вывода информации
+    private TableLayout dataTableLayout;
     private List<Transaction> dataList;
     private DataAdapter adapter;
     private DatabaseHelper databaseHelper;
-
-
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -41,13 +55,9 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_show_data);
 
         showDataDateEditText = findViewById(R.id.showDataDateEditText);
-        dataRecyclerView = findViewById(R.id.dataRecyclerView);
-        selectedDateTextView = findViewById(R.id.selectedDateTextView);
-
-
-        dataList = new ArrayList<>();
-        dataList.add(new Transaction("2024-01-01", "expense", 50.0, "Описание расхода"));
-        dataList.add(new Transaction("2024-01-02", "income", 100.0, "Описание дохода"));
+        dataTableLayout = findViewById(R.id.dataTableLayout);
+        dataList = getSampleData();  // Используем метод для получения примерных данных
+        adapter = new DataAdapter(dataList, this); // передаем this в конструктор
 
         // Установка OnClickListener для showDataDateEditText
         showDataDateEditText.setOnClickListener(new View.OnClickListener() {
@@ -59,6 +69,9 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
 
         // Инициализация DatabaseHelper
         databaseHelper = new DatabaseHelper(this);
+
+        showDataChartButton = findViewById(R.id.showDataChartButton);
+        showDataChartButton.setOnClickListener(this);
     }
 
     @Override
@@ -68,14 +81,33 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
         } else if (v.getId() == R.id.showDataButton) {
             String selectedDate = showDataDateEditText.getText().toString();
             showDataForSelectedDate(selectedDate);
+        } else if (v.getId() == R.id.showDataChartButton) {
+            String selectedDate = showDataDateEditText.getText().toString();
+            if (dataExistsForSelectedDate(selectedDate)) {
+                List<Transaction> transactions = getTransactionsFromDatabase(selectedDate);
+                showDataAsGraph(transactions);
+                // Показать график только после нажатия на кнопку
+                findViewById(R.id.pieChart).setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(this, "Нет данных за выбранную дату", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
 
-    public void showData(View view) {
-        String selectedDate = showDataDateEditText.getText().toString();
-        showDataForSelectedDate(selectedDate);
+
+
+
+    public boolean dataExistsForSelectedDate(String selectedDate) {
+        // Получение данных для выбранной даты
+        List<Transaction> transactions = getTransactionsFromDatabase(selectedDate);
+
+        // Проверка наличия данных
+        return transactions != null && !transactions.isEmpty();
     }
+
+
+
 
 
     public void showDatePicker(View view) {
@@ -84,23 +116,9 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 // Обработка выбранной даты
                 String selectedDate = String.format("%02d/%02d/%d", day, month + 1, year);
-
-                if (selectedDateTextView != null) {
-                    selectedDateTextView.setText(selectedDate);
-                }
-
-                if (showDataDateEditText != null) {
-                    showDataDateEditText.setText(selectedDate);
-                }
-
-                if (dataInfoTextView != null) {
-                    dataInfoTextView.setText("");
-                }
-
-                // Вызов метода для отображения данных после выбора даты
+                showDataDateEditText.setText(selectedDate);
                 showDataForSelectedDate(selectedDate);
             }
-
         };
 
         // Получение текущей даты
@@ -114,57 +132,263 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
         datePickerDialog.show();
     }
 
+    public String getSelectedDate() {
+        return showDataDateEditText.getText().toString();
+    }
 
 
-    // Метод для отображения данных за выбранную дату
-    private void showDataForSelectedDate(String selectedDate) {
+    public void showDataForSelectedDate(String selectedDate) {
+        List<Transaction> filteredData = null;
+
         if (selectedDate.isEmpty()) {
-            // Если дата не выбрана, выведите сообщение об ошибке
+            // Если дата не выбрана, скрыть заголовки и данные
+            hideDataAndGraph();
             Toast.makeText(this, "Выберите дату", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Получите данные для выбранной даты
-        List<Transaction> filteredData = getDataForDate(selectedDate);
+        filteredData = getTransactionsFromDatabase(selectedDate);
 
         if (filteredData.isEmpty()) {
-            // Если данных за выбранную дату нет, выведите соответствующее сообщение
+            // Если данных за выбранную дату нет, скрыть заголовки и данные
+            hideDataAndGraph();
             Toast.makeText(this, "Нет данных за выбранную дату", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Показать заголовки и данные
+        dataTableLayout.setVisibility(View.VISIBLE);
+
         // Добавление заголовков в TableLayout
-        TableLayout tableLayout = findViewById(R.id.dataTableLayout);
-        TableRow headerRow = (TableRow) getLayoutInflater().inflate(R.layout.table_row, null);
-        ((TextView) headerRow.findViewById(R.id.column1)).setText("Дата");
-        ((TextView) headerRow.findViewById(R.id.column2)).setText("Тип");
-        ((TextView) headerRow.findViewById(R.id.column3)).setText("Сумма");
-        ((TextView) headerRow.findViewById(R.id.column4)).setText("Название");
-        tableLayout.removeAllViews();
-        tableLayout.addView(headerRow);
+        TableRow headerRow = createHeaderRow();
+        dataTableLayout.removeAllViews();
+        dataTableLayout.addView(headerRow);
 
         // Добавление данных в TableLayout
         for (Transaction transaction : filteredData) {
-            TableRow dataRow = (TableRow) getLayoutInflater().inflate(R.layout.table_row, null);
-            ((TextView) dataRow.findViewById(R.id.column1)).setText(transaction.getDate());
-            ((TextView) dataRow.findViewById(R.id.column2)).setText(getTypeInRussian(transaction.getType()));
-            ((TextView) dataRow.findViewById(R.id.column3)).setText(String.valueOf(transaction.getAmount()));
-            ((TextView) dataRow.findViewById(R.id.column4)).setText(transaction.getName());
-            tableLayout.addView(dataRow);
+            TableRow dataRow = createDataRow(transaction);
+            dataTableLayout.addView(dataRow);
         }
 
-        // Создание адаптера и установка его в RecyclerView
-        adapter = new DataAdapter(filteredData);
-        dataRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        dataRecyclerView.setAdapter(adapter);
+        // Показать график только после нажатия на кнопку
+        findViewById(R.id.pieChart).setVisibility(View.GONE);
+        findViewById(R.id.showDataChartButton).setVisibility(View.VISIBLE);
     }
 
 
 
 
 
+
+    private void showDataAsGraph(List<Transaction> transactions) {
+        // Очистите предыдущие данные графика
+        PieChart pieChart = findViewById(R.id.pieChart);
+        pieChart.clear();
+
+        // Создание списка входных данных
+        List<PieEntry> entries = new ArrayList<>();
+
+        // Переменные для общей суммы доходов и расходов
+        double totalIncome = 0;
+        double totalExpense = 0;
+
+        // Получение данных для круговой диаграммы (название, сумма, тип)
+        for (Transaction transaction : transactions) {
+            // Добавляем текущую сумму к общей сумме доходов или расходов
+            if ("income".equals(transaction.getType())) {
+                totalIncome += transaction.getAmount();
+            } else if ("expense".equals(transaction.getType())) {
+                totalExpense += transaction.getAmount();
+            }
+        }
+
+        // Получение данных для круговой диаграммы (название, сумма, тип)
+        for (Transaction transaction : transactions) {
+            // Создаем объект PieEntry для текущей транзакции
+            float percent = 0;
+            if ("income".equals(transaction.getType())) {
+                percent = (float) (transaction.getAmount() / totalIncome);
+            } else if ("expense".equals(transaction.getType())) {
+                percent = (float) (transaction.getAmount() / totalExpense);
+            }
+
+            // Создаем подписи для каждой транзакции
+            PieEntry entry = new PieEntry(percent, generateTransactionLabel(transaction));
+
+            // Добавляем объект PieEntry в список entries
+            entries.add(entry);
+        }
+
+        // Создание набора данных для круговой диаграммы
+        PieDataSet dataSet = new PieDataSet(entries, "");
+        dataSet.setColors(ColorTemplate.JOYFUL_COLORS); // Установка цветов
+
+        // Создание объекта PieData и установка данных
+        PieData pieData = new PieData(dataSet);
+        pieChart.setData(pieData);
+
+        // Настройка графика и отображение
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.setDrawEntryLabels(false); // Отключаем стандартные подписи
+        pieChart.setDrawSlicesUnderHole(true); // Добавляем подписи на сегменты
+        pieChart.setHoleRadius(40f); // Увеличиваем радиус внутренней части
+        pieChart.setDrawCenterText(true); // Включаем центральный текст
+
+        // Устанавливаем текст в центре круговой диаграммы
+        pieChart.setCenterText(generateCenterText(totalIncome, totalExpense));
+
+        // Настройка подписей сегментов
+        pieChart.setEntryLabelTextSize(12f); // Устанавливаем размер подписей
+        pieChart.setEntryLabelColor(Color.BLACK); // Устанавливаем цвет подписей
+
+        Legend legend = pieChart.getLegend();
+        legend.setOrientation(Legend.LegendOrientation.VERTICAL);
+
+        legend.setFormSize(12f);
+        legend.setXEntrySpace(16f);
+        legend.setYEntrySpace(8f);
+        legend.setFormToTextSpace(5f);
+        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.LEFT);
+
+
+
+
+
+        // Устанавливаем тип анимации
+        pieChart.animateY(1000, Easing.EaseInOutCubic);
+
+        pieChart.invalidate(); // Обновляем диаграмму
+    }
+
+    // Генерация текста для отображения каждой транзакции в круговой диаграмме
+    private String generateTransactionLabel(Transaction transaction) {
+        return String.format(Locale.getDefault(), "%s - %s", transaction.getName(), transaction.getAmount());
+    }
+
+    // Генерация текста для центра круговой диаграммы
+    private SpannableString generateCenterText(double totalIncome, double totalExpense) {
+        SpannableString s = new SpannableString("Общий Доход:\n" + totalIncome + "\nОбщий Расход:\n" + totalExpense);
+        s.setSpan(new StyleSpan(Typeface.BOLD), 0, s.length(), 0);
+        s.setSpan(new RelativeSizeSpan(1.3f), 0, s.length(), 0);
+        return s;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    private void hideDataAndGraph() {
+        findViewById(R.id.pieChart).setVisibility(View.GONE);
+        dataTableLayout.setVisibility(View.GONE);
+        findViewById(R.id.showDataChartButton).setVisibility(View.GONE);
+    }
+
+
+
+
+
+
+
+
+
+    // Метод для создания строки заголовка
+    private TableRow createHeaderRow() {
+        TableRow headerRow = (TableRow) getLayoutInflater().inflate(R.layout.table_row, null);
+        ((TextView) headerRow.findViewById(R.id.column1)).setText("Дата");
+        ((TextView) headerRow.findViewById(R.id.column2)).setText("Тип");
+        ((TextView) headerRow.findViewById(R.id.column3)).setText("Сумма");
+        ((TextView) headerRow.findViewById(R.id.column4)).setText("Название");
+        return headerRow;
+    }
+
+    // Метод для создания строки данных
+    private TableRow createDataRow(Transaction transaction) {
+        TableRow dataRow = (TableRow) getLayoutInflater().inflate(R.layout.table_row, null);
+        ((TextView) dataRow.findViewById(R.id.column1)).setText(transaction.getDate());
+        ((TextView) dataRow.findViewById(R.id.column2)).setText(getTypeInRussian(transaction.getType()));
+        ((TextView) dataRow.findViewById(R.id.column3)).setText(String.valueOf(transaction.getAmount()));
+        ((TextView) dataRow.findViewById(R.id.column4)).setText(transaction.getName());
+
+        // Добавление ImageView для иконки удаления
+        ImageView deleteIcon = new ImageView(this);
+        deleteIcon.setImageResource(android.R.drawable.ic_menu_delete);
+        deleteIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onDeleteButtonClick(v, transaction);
+            }
+        });
+
+        // Добавление иконки удаления в строку данных
+        dataRow.addView(deleteIcon);
+
+        return dataRow;
+    }
+
+
+
+
+
+    private void deleteTransactionFromDatabase(Transaction transaction) {
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        String whereClause = DatabaseHelper.KEY_ID + " = ?";
+        String[] whereArgs = {String.valueOf(transaction.getId())};
+
+        // Получаем тип транзакции (расход или доход)
+        String type = transaction.getType();
+
+        // Получаем сумму транзакции
+        double amount = transaction.getAmount();
+
+        // Удаление записи из базы данных
+        db.delete(DatabaseHelper.TABLE_TRANSACTIONS, whereClause, whereArgs);
+        db.close();
+    }
+
+
+
+    public void onDeleteButtonClick(View view, Transaction transaction) {
+        // Получаем позицию элемента, который нужно удалить
+        int position = dataTableLayout.indexOfChild((TableRow) view.getParent());
+
+        if (position != -1) {
+            // Создаем диалог подтверждения
+            ConfirmationDialogFragment confirmationDialog = ConfirmationDialogFragment.newInstance("Вы действительно хотите удалить запись?");
+            confirmationDialog.setOnConfirmationListener(new ConfirmationDialogFragment.OnConfirmationListener() {
+                @Override
+                public void onConfirm() {
+                    // Пользователь подтвердил удаление, добавляем код удаления из базы данных
+                    deleteTransactionFromDatabase(transaction);
+
+                    showDataForSelectedDate(getSelectedDate());
+                }
+
+                @Override
+                public void onCancel() {
+                    // Пользователь отменил удаление
+                }
+            });
+
+            // Показываем диалог
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            confirmationDialog.show(fragmentManager, "ConfirmationDialog");
+        }
+    }
+
+
+
     // Получение данных для выбранной даты из базы данных
-    private List<Transaction> getDataForDate(String selectedDate) {
+    private List<Transaction> getTransactionsFromDatabase(String selectedDate) {
         List<Transaction> transactions = new ArrayList<>();
 
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
@@ -204,27 +428,6 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
         return transactions;
     }
 
-    // Метод для отображения информации о данных в TextView
-    private void displayDataInfo(List<Transaction> transactions) {
-        // Добавление заголовков
-        String header = "Дата\t\t\t\tТип\t\t\tСумма\t\t\tНазвание\n";
-        StringBuilder infoBuilder = new StringBuilder(header);
-
-        for (Transaction transaction : transactions) {
-            // Добавление данных
-            String info = String.format("%s\t\t\t\t%s\t\t\t%.2f\t\t\t%s\n",
-                    transaction.getDate(), getTypeInRussian(transaction.getType()), transaction.getAmount(), transaction.getName());
-            infoBuilder.append(info);
-        }
-
-        // Установка собранной информации в TextView
-        if (dataInfoTextView != null) {
-            dataInfoTextView.setText(infoBuilder.toString());
-        }
-    }
-
-
-
     // Метод для получения типа на русском языке
     private String getTypeInRussian(String type) {
         if ("expense".equals(type)) {
@@ -234,5 +437,24 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
         }
         return type;
     }
-}
 
+    // Метод для получения примерных данных
+    private List<Transaction> getSampleData() {
+        List<Transaction> sampleData = new ArrayList<>();
+        sampleData.add(new Transaction("2024-01-01", "expense", 50.0, "Описание расхода"));
+        sampleData.add(new Transaction("2024-01-02", "income", 100.0, "Описание дохода"));
+        return sampleData;
+    }
+
+    @Override
+    public void onConfirm() {
+
+    }
+
+
+
+    @Override
+    public void onCancel() {
+
+    }
+}

@@ -5,6 +5,7 @@
     android:background="@color/yellow">
 
     <LinearLayout
+        android:id="@+id/dataHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -20,20 +21,12 @@
             android:focusable="false"
             android:onClick="showDatePicker"/>
 
-        <Button
-            android:id="@+id/showDataButton"
-            android:layout_width="262dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:onClick="showData"
-            android:text="Показать данные"
-            android:visibility="gone"/>
-
         <TableLayout
             android:id="@+id/dataTableLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
 
             <!-- Header Row -->
             <TableRow>
@@ -63,15 +56,47 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/black"
                     android:text="Название"/>
+
+                <ImageView
+                    android:id="@+id/deleteTransactionImageView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:clickable="true"
+                    android:onClick="onDeleteButtonClick"
+                    android:src="@android:drawable/ic_menu_delete" />
+
             </TableRow>
         </TableLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/dataRecyclerView"
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:background="@color/yellow" />
+
+
+        <Button
+            android:id="@+id/showDataChartButton"
+            android:layout_width="352dp"
+            android:layout_height="36dp"
+            android:background="@drawable/buttonshape"
+            android:text="Показать в виде графика"
+            android:visibility="gone"/>
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:visibility="gone"/>
+            android:background="@color/yellow" />
+
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pieChart"
+            android:maxLines="2"
+            android:layout_width="match_parent"
+            android:layout_height="484dp"
+            android:visibility="gone" />
+
+
 
     </LinearLayout>
 </ScrollView>

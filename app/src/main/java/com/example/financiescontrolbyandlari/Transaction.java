@@ -1,5 +1,10 @@
 package com.example.financiescontrolbyandlari;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class Transaction {
     private int id;
     private String date;
@@ -10,6 +15,25 @@ public class Transaction {
     // Конструктор без параметров
     public Transaction() {
         // Конструктор без параметров (необязательно)
+
+        this.date = date;
+    }
+
+    public float getDateAsXValue() {
+        // Преобразование строки даты в числовое значение (возможно, UNIX-время, если такое нужно)
+        // Пример для возвращения таймстампа:
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = dateFormat.parse(this.date);
+            return date.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public float getAmountAsYValue() {
+        return (float) amount; // Предполагается, что `amount` - это float или double
     }
 
     // Конструктор с параметрами (без id)

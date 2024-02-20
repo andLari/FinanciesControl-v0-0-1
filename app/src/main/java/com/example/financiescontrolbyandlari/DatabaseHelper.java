@@ -43,6 +43,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + COLUMN_INITIAL_BALANCE + " REAL DEFAULT 0" + ")";
 
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
@@ -94,6 +95,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return newBalance;
     }
+
+    public void deleteTransaction(int transactionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_TRANSACTIONS, KEY_ID + " = ?", new String[]{String.valueOf(transactionId)});
+        db.close();
+    }
+
 
     public double updateAndGetCurrentBalance(double amount) {
         SQLiteDatabase db = this.getWritableDatabase();
