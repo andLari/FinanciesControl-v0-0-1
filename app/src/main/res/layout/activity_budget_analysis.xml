@@ -25,7 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Начальный счет:"
+        android:text="Ваш счет:"
         android:textColor="@color/black"
         app:layout_constraintTop_toBottomOf="@id/analysisTitle"
         app:layout_constraintEnd_toEndOf="parent"

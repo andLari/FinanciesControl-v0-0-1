@@ -182,7 +182,7 @@ public class ShowDataActivity extends AppCompatActivity implements View.OnClickL
 
 
     private void showDataAsGraph(List<Transaction> transactions) {
-        // Очистите предыдущие данные графика
+        // Очищаю предыдущие данные графика
         PieChart pieChart = findViewById(R.id.pieChart);
         pieChart.clear();
 

@@ -56,14 +56,20 @@ public class InvestmentCalculatorActivity extends AppCompatActivity {
     }
 
     private double calculateProfit(double amount, double interestRate, int term, String termUnit) {
+        // Преобразуем процентную ставку в десятичную дробь
         double rate = interestRate / 100;
 
+        // Если срок вложения указан в годах
         if (termUnit.equals("Годы")) {
-            return amount * Math.pow(1 + rate, term) - amount;
+            // Используем формулу сложного процента для годового срока
+            return amount * (1 + rate * term) - amount;
         } else {
-            return amount * Math.pow(1 + rate / 12, term) - amount;
+            // Если срок вложения указан в месяцах
+            // Преобразуем годовую процентную ставку в месячную и используем формулу сложного процента для месячного срока
+            return amount * (1 + rate / 12 * term) - amount;
         }
     }
+
 
     private String formatAmountInRubles(double amount) {
         // Форматируем сумму в рублях с помощью NumberFormat
